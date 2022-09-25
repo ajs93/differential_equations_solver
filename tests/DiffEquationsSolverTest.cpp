@@ -26,11 +26,11 @@ SCENARIO("Simple test example", "[auto]") {
         REQUIRE(res.t.at(3) == Catch::Approx(3).epsilon(0.01));
         REQUIRE(res.t.at(4) == Catch::Approx(4).epsilon(0.01));
 
-        REQUIRE(res.y.at(0, 0) == initial_condition);
-        REQUIRE(res.y.at(1, 0) == Catch::Approx(2).epsilon(0.01));
-        REQUIRE(res.y.at(2, 0) == Catch::Approx(4).epsilon(0.01));
-        REQUIRE(res.y.at(3, 0) == Catch::Approx(8).epsilon(0.01));
-        REQUIRE(res.y.at(4, 0) == Catch::Approx(16).epsilon(0.01));
+        REQUIRE(res.y.at(0).at(0) == initial_condition);
+        REQUIRE(res.y.at(0).at(1) == Catch::Approx(2).epsilon(0.01));
+        REQUIRE(res.y.at(0).at(2) == Catch::Approx(4).epsilon(0.01));
+        REQUIRE(res.y.at(0).at(3) == Catch::Approx(8).epsilon(0.01));
+        REQUIRE(res.y.at(0).at(4) == Catch::Approx(16).epsilon(0.01));
       }
     }
   }
@@ -56,12 +56,12 @@ SCENARIO("Simple test example", "[auto]") {
         REQUIRE(res.t.at(4) == Catch::Approx(0.4).epsilon(0.01));
         REQUIRE(res.t.at(5) == Catch::Approx(0.5).epsilon(0.01));
 
-        REQUIRE(res.y.at(0, 0) == Catch::Approx(1).epsilon(0.01));
-        REQUIRE(res.y.at(1, 0) == Catch::Approx(0.9).epsilon(0.01));
-        REQUIRE(res.y.at(2, 0) == Catch::Approx(0.852967995).epsilon(0.01));
-        REQUIRE(res.y.at(3, 0) == Catch::Approx(0.837441500).epsilon(0.01));
-        REQUIRE(res.y.at(4, 0) == Catch::Approx(0.839833779).epsilon(0.01));
-        REQUIRE(res.y.at(5, 0) == Catch::Approx(0.851677371).epsilon(0.01));
+        REQUIRE(res.y.at(0).at(0) == Catch::Approx(1).epsilon(0.01));
+        REQUIRE(res.y.at(0).at(1) == Catch::Approx(0.9).epsilon(0.01));
+        REQUIRE(res.y.at(0).at(2) == Catch::Approx(0.852967995).epsilon(0.01));
+        REQUIRE(res.y.at(0).at(3) == Catch::Approx(0.837441500).epsilon(0.01));
+        REQUIRE(res.y.at(0).at(4) == Catch::Approx(0.839833779).epsilon(0.01));
+        REQUIRE(res.y.at(0).at(5) == Catch::Approx(0.851677371).epsilon(0.01));
       }
     }
   }

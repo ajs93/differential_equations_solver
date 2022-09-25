@@ -24,7 +24,7 @@ SCENARIO("Ejercicio 2.a", "[auto]") {
 
       THEN("The error shall be inside 10%% of the real solution") {
         for (uint64_t t_idx = 0; t_idx < ret.t.size(); t_idx++) {
-          CHECK(ret.y.at(t_idx, 0) == Catch::Approx(real_solution(ret.t.at(t_idx))).epsilon(0.1));
+          REQUIRE(ret.y.at(0).at(t_idx) == Catch::Approx(real_solution(ret.t.at(t_idx))).epsilon(0.1));
         }
       }
     }
@@ -34,7 +34,7 @@ SCENARIO("Ejercicio 2.a", "[auto]") {
 
       THEN("The error shall be inside 1%% of the real solution") {
         for (uint64_t t_idx = 0; t_idx < ret.t.size(); t_idx++) {
-          CHECK(ret.y.at(t_idx, 0) == Catch::Approx(real_solution(ret.t.at(t_idx))).epsilon(0.01));
+          REQUIRE(ret.y.at(0).at(t_idx) == Catch::Approx(real_solution(ret.t.at(t_idx))).epsilon(0.01));
         }
       }
     }
@@ -44,7 +44,7 @@ SCENARIO("Ejercicio 2.a", "[auto]") {
 
       THEN("The error shall be inside 0.1%% of the real solution") {
         for (uint64_t t_idx = 0; t_idx < ret.t.size(); t_idx++) {
-          CHECK(ret.y.at(t_idx, 0) == Catch::Approx(real_solution(ret.t.at(t_idx))).epsilon(0.001));
+          REQUIRE(ret.y.at(0).at(t_idx) == Catch::Approx(real_solution(ret.t.at(t_idx))).epsilon(0.001));
         }
       }
     }
