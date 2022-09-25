@@ -92,12 +92,12 @@ SCENARIO("N-th order differential equation with 1x1 matrix", "[auto]") {
         REQUIRE(res.t.at(4) == Catch::Approx(0.4).epsilon(0.01));
         REQUIRE(res.t.at(5) == Catch::Approx(0.5).epsilon(0.01));
 
-        REQUIRE(res.y.at(0).at(0, 0) == Catch::Approx(1).epsilon(0.01));
-        REQUIRE(res.y.at(1).at(0, 0) == Catch::Approx(0.9).epsilon(0.01));
-        REQUIRE(res.y.at(2).at(0, 0) == Catch::Approx(0.852967995).epsilon(0.01));
-        REQUIRE(res.y.at(3).at(0, 0) == Catch::Approx(0.837441500).epsilon(0.01));
-        REQUIRE(res.y.at(4).at(0, 0) == Catch::Approx(0.839833779).epsilon(0.01));
-        REQUIRE(res.y.at(5).at(0, 0) == Catch::Approx(0.851677371).epsilon(0.01));
+        REQUIRE(res.y.at(0).at(0) == Catch::Approx(1).epsilon(0.01));
+        REQUIRE(res.y.at(0).at(1) == Catch::Approx(0.9).epsilon(0.01));
+        REQUIRE(res.y.at(0).at(2) == Catch::Approx(0.852967995).epsilon(0.01));
+        REQUIRE(res.y.at(0).at(3) == Catch::Approx(0.837441500).epsilon(0.01));
+        REQUIRE(res.y.at(0).at(4) == Catch::Approx(0.839833779).epsilon(0.01));
+        REQUIRE(res.y.at(0).at(5) == Catch::Approx(0.851677371).epsilon(0.01));
       }
     }
   }

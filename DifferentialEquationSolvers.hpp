@@ -17,25 +17,56 @@ using EcuationGenerator = std::function<T(double t, const T &y)>;
 template<typename T = double>
 using DiffPointSolver = std::function<T(double t_prev, const T &y_prev, double h, const EcuationGenerator<T> &diff_eq)>;
 
+/**
+ * @brief Result from resolving a single order differential equation
+ * 
+ * @tparam T Template parameter for the data type of the result
+ */
 template<typename T = double>
-struct DifferentialEcuationResult {
+struct DifferentialEquationResult {
+  /** Time vector for the result */
   std::vector<double> t;
+
+  /**
+   * @brief Matrix of results where each column represents
+   * a result vector
+   */
   Matrix2D<T> y;
 
-  DifferentialEcuationResult(const std::vector<double> &_t, const Matrix2D<T> &_y) : t(_t), y(_y) {}
+  DifferentialEquationResult(const std::vector<double> &_t, const Matrix2D<T> &_y) : t(_t), y(_y) {}
 
-  DifferentialEcuationResult(std::vector<double> &&_t, Matrix2D<T> &&_y) : t(std::move(_t)), y(std::move(_y)) {}
+  DifferentialEquationResult(std::vector<double> &&_t, Matrix2D<T> &&_y) : t(std::move(_t)), y(std::move(_y)) {}
 
-  DifferentialEcuationResult(const DifferentialEcuationResult &other) : t(other.t), y(other.y) {}
+  DifferentialEquationResult(const DifferentialEquationResult &other) : t(other.t), y(other.y) {}
 
-  DifferentialEcuationResult(DifferentialEcuationResult &&other) : t(std::move(other.t)), y(std::move(other.y)) {}
+  DifferentialEquationResult(DifferentialEquationResult &&other) : t(std::move(other.t)), y(std::move(other.y)) {}
 };
 
+/**
+ * @brief Calculate a differential point with the Euler method
+ * 
+ * @tparam T Template data type for this solver
+ * @param t_prev Previous time for the calculation
+ * @param y_prev Previous result for the calculation
+ * @param h Sample time delta
+ * @param diff_eq Differential equation generator
+ * @return T Calculated point
+ */
 template<typename T = double>
 T solveEulerPoint(double t_prev, const T &y_prev, double h, const EcuationGenerator<T> &diff_eq) {
   return y_prev + h * diff_eq(t_prev, y_prev);
 }
 
+/**
+ * @brief Calculate a differential point with the Heun/Newton method
+ * 
+ * @tparam T Template data type for this solver
+ * @param t_prev Previous time for the calculation
+ * @param y_prev Previous result for the calculation
+ * @param h Sample time delta
+ * @param diff_eq Differential equation generator
+ * @return T Calculated point
+ */
 template<typename T = double>
 T solveHeunPoint(double t_prev, const T &y_prev, double h, const EcuationGenerator<T> &diff_eq) {
   T euler_term = diff_eq(t_prev, y_prev);
@@ -43,6 +74,16 @@ T solveHeunPoint(double t_prev, const T &y_prev, double h, const EcuationGenerat
   return y_prev + ((h / 2.0) * (euler_term + heun_term));
 }
 
+/**
+ * @brief Calculate a differential point with the Runge-Kutta 4 method
+ * 
+ * @tparam T Template data type for this solver
+ * @param t_prev Previous time for the calculation
+ * @param y_prev Previous result for the calculation
+ * @param h Sample time delta
+ * @param diff_eq Differential equation generator
+ * @return T Calculated point
+ */
 template<typename T = double>
 T solveRungeKuttaPoint(double t_prev, const T &y_prev, double h, const EcuationGenerator<T> &diff_eq) {
   auto f1 = diff_eq(t_prev, y_prev);
@@ -53,8 +94,21 @@ T solveRungeKuttaPoint(double t_prev, const T &y_prev, double h, const EcuationG
   return y_prev + h * ((f1 + (2 * f2) + (2 * f3) + f4) / 6);
 }
 
+/**
+ * @brief Solve multiple independent single order differential equations
+ * @exception std::runtime_error If there is a mismatch between generators and initial
+ * conditions vector sizes
+ * 
+ * @tparam T Template data type for this solver
+ * @param span Time span where to solve the differential equation
+ * @param sample_amount Desired amount of samples between the time span
+ * @param initial_conditions Vector of initial conditions for the results
+ * @param generators Vector of differential equations to be solved
+ * @param point_solver Solver generator for the differential points
+ * @return DifferentialEquationResult<T> Result for the multiple ODEs
+ */
 template<typename T = double>
-DifferentialEcuationResult<T> solve(const std::pair<double, double> &span,
+DifferentialEquationResult<T> solve(const std::pair<double, double> &span,
                                     uint64_t sample_amount,
                                     const std::vector<T> &initial_conditions,
                                     const std::vector<EcuationGenerator<T>> &generators,
@@ -81,26 +135,39 @@ DifferentialEcuationResult<T> solve(const std::pair<double, double> &span,
     }
   }
 
-  return DifferentialEcuationResult(t, y);
+  return DifferentialEquationResult(t, y);
 }
 
+/**
+ * @brief Result from resolving an Nth order differential equation system
+ * 
+ * @tparam T Template data type for the differential equation system
+ */
 template<typename T = double>
-struct NthOrderDifferentialEcuationResult {
+struct NthOrderDifferentialEquationResult {
+  /** Time vector for the results */
   std::vector<double> t;
-  std::vector<Matrix2D<T>> y;
 
-  NthOrderDifferentialEcuationResult(const std::vector<double> &_t, const std::vector<Matrix2D<T>> &_y) : t(_t), y(_y) {}
+  /**
+   * @brief Vector of matrices to hold the results
+   * Where:
+   * Each vector in the vector represents an output result vector
+   * and each point in the sub-vector represents a resolution point
+   */
+  std::vector<std::vector<T>> y;
 
-  NthOrderDifferentialEcuationResult(std::vector<double> &&_t, std::vector<Matrix2D<T>> &&_y) : t(std::move(_t)), y(std::move(_y)) {}
+  NthOrderDifferentialEquationResult(const std::vector<double> &_t, const std::vector<std::vector<T>> &_y) : t(_t), y(_y) {}
 
-  NthOrderDifferentialEcuationResult(const NthOrderDifferentialEcuationResult &other) : t(other.t), y(other.y) {}
+  NthOrderDifferentialEquationResult(std::vector<double> &&_t, std::vector<std::vector<T>> &&_y) : t(std::move(_t)), y(std::move(_y)) {}
 
-  NthOrderDifferentialEcuationResult(NthOrderDifferentialEcuationResult &&other) : t(std::move(other.t)), y(std::move(other.y)) {}
+  NthOrderDifferentialEquationResult(const NthOrderDifferentialEquationResult &other) : t(other.t), y(other.y) {}
+
+  NthOrderDifferentialEquationResult(NthOrderDifferentialEquationResult &&other) : t(std::move(other.t)), y(std::move(other.y)) {}
 };
 
 
 template<typename T = double>
-NthOrderDifferentialEcuationResult<T> solveNthOrder(std::pair<double, double> span,
+NthOrderDifferentialEquationResult<T> solveNthOrder(std::pair<double, double> span,
                                                     uint64_t sample_amount,
                                                     const std::vector<T> &initial_conditions,
                                                     const InputGenerator<T> &input_generator,
@@ -126,21 +193,20 @@ NthOrderDifferentialEcuationResult<T> solveNthOrder(std::pair<double, double> sp
   const uint64_t eq_amount = A.getRowAmount();
   const double h = (span.second - span.first) / double(sample_amount - 1);
   std::vector<double> t(sample_amount);
-  std::vector<Matrix2D<T>> y;
+  std::vector<std::vector<T>> y;
 
   // Initial conditions for result matrix
   for (uint64_t eq_idx = 0; eq_idx < eq_amount; eq_idx++) {
-    y.emplace_back(Matrix2D(eq_amount, 1));
-    y.at(0).at(eq_idx, 0) = initial_conditions.at(eq_idx);
+    y.emplace_back(std::vector(sample_amount));
+    y.at(eq_idx).at(0) = initial_conditions.at(eq_idx);
   }
 
   // Now we need to solve the N differential equations of first order
   for (uint64_t t_idx = 1; t_idx < sample_amount; t_idx++) {
     t.at(t_idx) = span.first + (h * double(t_idx));
-    y.emplace_back(Matrix2D(eq_amount, 1));
 
     for (uint64_t eq_idx = 0; eq_idx < eq_amount; eq_idx++) {
-      y.at(t_idx).at(eq_idx, 0) = point_solver(t.at(t_idx - 1), y.at(t_idx - 1).at(eq_idx, 0), h, [&y, &A, &B, &t_idx, &eq_idx, &input_generator] (double t, const T &_y) {
+      y.at(eq_idx).at(eq_idx) = point_solver(t.at(t_idx - 1), y.at(t_idx - 1).at(eq_idx, 0), h, [&y, &A, &B, &t_idx, &eq_idx, &input_generator] (double t, const T &_y) {
         auto a_x = A.getRow(eq_idx) * _y;
         auto b_u = B.getRow(eq_idx) * input_generator(t);
         return a_x.at(0, 0) + b_u.at(0, 0);
@@ -148,7 +214,7 @@ NthOrderDifferentialEcuationResult<T> solveNthOrder(std::pair<double, double> sp
     }
   }
 
-  return NthOrderDifferentialEcuationResult(t, y);
+  return NthOrderDifferentialEquationResult(t, y);
 }
 
 };
