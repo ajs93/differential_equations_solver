@@ -8,11 +8,23 @@
 #include <stdexcept>
 #include <vector>
 
+/**
+ * @brief Template class to define a generic matrix of N dimensions
+ * 
+ * @tparam T Template parameter type that will contain this matrix
+ */
 template<typename T = double>
 class MatrixND {
 public:
+  /** Deleted dfault constructor */
   MatrixND() = delete;
 
+  /**
+   * @brief Matrix constructor
+   * @exception std::runtime_error If any error is found in the dimensions vector
+   * 
+   * @param dimensions Vector of dimensions for this matrix
+   */
   MatrixND(const std::vector<uint64_t> &dimensions) : _dimensions(dimensions), _values(_internalSize()) {
     for (const uint64_t &dim : _dimensions) {
       if (dim == 0) {
@@ -21,6 +33,13 @@ public:
     }
   }
 
+  /**
+   * @brief Matrix constructor
+   * @exception std::runtime_error If any error is found in the dimensions vector
+   * 
+   * @param dimensions Vector of dimensions for this matrix
+   * @param initial_value Initial value for all of the indexes of this matrix
+   */
   MatrixND(const std::vector<uint64_t> &dimensions, const T &initial_value) : _dimensions(dimensions), _values(_internalSize()) {
     for (const uint64_t &dim : _dimensions) {
       if (dim == 0) {
@@ -33,26 +52,64 @@ public:
     }
   }
 
+  /**
+   * @brief Copy constructor from another N dimensional matrix
+   * 
+   * @param other Matrix from which to create the new one
+   */
   MatrixND(const MatrixND &other) : _dimensions(other._dimensions), _values(other._values) {}
 
+  /**
+   * @brief Move constructor from another N dimensional matrix
+   * 
+   * @param other Matrix from which to create the new one
+   */
   MatrixND(MatrixND &&other) : _dimensions(std::move(other._dimensions)), _values(std::move(other._values)) {}
 
+  /** Default destructor */
   ~MatrixND() = default;
 
+  /**
+   * @brief Access a value of the matrix at @a coords
+   * @exception std::runtime_error If any error is found in the coordinates to access the element
+   * 
+   * @param coords Coordinates inside the matrix of the element to be accesed
+   * @return T& Element of the matrix at @a coords
+   */
   T &at(const std::vector<uint64_t> &coords) {
     return _values.at(_indexOf(coords));
   }
 
+  /**
+   * @brief Access a value of the matrix at @a coords
+   * @exception std::runtime_error If any error is found in the coordinates to access the element
+   * 
+   * @param coords Coordinates inside the matrix of the element to be accesed
+   * @return T& Element of the matrix at @a coords
+   */
   const T &at(const std::vector<uint64_t> &coords) const {
     return _values.at(_indexOf(coords));
   }
 
+  /**
+   * @brief Equality operator
+   * 
+   * @param other Matrix to be copied
+   * @return MatrixND& Already copied matrix
+   */
   MatrixND &operator=(const MatrixND &other) {
     _dimensions = other._dimensions;
     _values = other._values;
     return *this;
   }
 
+  /**
+   * @brief Sum operator against another matrix
+   * @exception std::runtime_error If the matrices cannot be summed due to dimension issues
+   * 
+   * @param other Matrix to be summed
+   * @return MatrixND Matrix that results of the sum
+   */
   MatrixND operator+(const MatrixND &other) const {
     if (_sumSubDimensionCheck(other)) {
       std::ostringstream err;
@@ -69,6 +126,13 @@ public:
     return ret;
   }
 
+  /**
+   * @brief Sum and assign operator against another matrix
+   * @exception std::runtime_error If the matrices cannot be summed due to dimension issues
+   * 
+   * @param other Matrix to be summed
+   * @return MatrixND& Matrix that results of the sum
+   */
   MatrixND &operator+=(const MatrixND &other) {
     if (_sumSubDimensionCheck(other)) {
       std::ostringstream err;
@@ -83,6 +147,12 @@ public:
     return *this;
   }
 
+  /**
+   * @brief Sum operator against a scalar
+   * 
+   * @param other Scalar to be summed with the matrix
+   * @return MatrixND Matrix that results of the sum
+   */
   MatrixND operator+(const T &o) const {
     MatrixND ret(*this);
 
@@ -93,6 +163,12 @@ public:
     return ret;
   }
 
+  /**
+   * @brief Sum and assign operator against a scalar
+   * 
+   * @param other Scalar to be summed with the matrix
+   * @return MatrixND Matrix that results of the sum
+   */
   MatrixND &operator+=(const T &o) {
     for (uint64_t idx = 0; idx < _values.size(); idx++) {
       _values.at(idx) += o;
@@ -101,6 +177,13 @@ public:
     return *this;
   }
 
+  /**
+   * @brief Substract operator against another matrix
+   * @exception std::runtime_error If the matrices cannot be substracted due to dimension issues
+   * 
+   * @param other Matrix to be substracted
+   * @return MatrixND Matrix that results of the substraction
+   */
   MatrixND operator-(const MatrixND &other) const {
     if (_sumSubDimensionCheck(other)) {
       std::ostringstream err;
@@ -117,6 +200,13 @@ public:
     return ret;
   }
 
+  /**
+   * @brief Substract and assign operator against another matrix
+   * @exception std::runtime_error If the matrices cannot be substracted due to dimension issues
+   * 
+   * @param other Matrix to be substracted
+   * @return MatrixND Matrix that results of the substraction
+   */
   MatrixND &operator-=(const MatrixND &other) {
     if (_sumSubDimensionCheck(other)) {
       std::ostringstream err;
@@ -131,6 +221,12 @@ public:
     return *this;
   }
 
+  /**
+   * @brief Substract operator against a scalar
+   * 
+   * @param other Scalar to be substracted
+   * @return MatrixND Matrix that results of the substraction
+   */
   MatrixND operator-(const T &o) const {
     MatrixND ret(*this);
 
@@ -141,6 +237,12 @@ public:
     return ret;
   }
 
+  /**
+   * @brief Substract and assign operator against a scalar
+   * 
+   * @param other Scalar to be substracted
+   * @return MatrixND Matrix that results of the substraction
+   */
   MatrixND &operator-=(const T &o) {
     for (uint64_t idx = 0; idx < _values.size(); idx++) {
       _values.at(idx) -= o;
@@ -149,6 +251,12 @@ public:
     return *this;
   }
 
+  /**
+   * @brief Multiply operator against a scalar
+   * 
+   * @param other Scalar to be multiplied
+   * @return MatrixND Matrix that results of the multiplication
+   */
   MatrixND operator*(const T &o) const {
     MatrixND ret(*this);
 
@@ -159,6 +267,12 @@ public:
     return ret;
   }
 
+  /**
+   * @brief Multiply and assign operator against a scalar
+   * 
+   * @param other Scalar to be multiplied
+   * @return MatrixND Matrix that results of the multiplication
+   */
   MatrixND &operator*=(const T &o) {
     for (uint64_t idx = 0; idx < _values.size(); idx++) {
       _values.at(idx) *= o;
@@ -167,6 +281,12 @@ public:
     return *this;
   }
 
+  /**
+   * @brief Divide operator against a scalar
+   * 
+   * @param other Scalar to be divided
+   * @return MatrixND Matrix that results of the division
+   */
   MatrixND operator/(const T &o) const {
     MatrixND ret(*this);
 
@@ -177,6 +297,12 @@ public:
     return ret;
   }
 
+  /**
+   * @brief Divide and assign operator against a scalar
+   * 
+   * @param other Scalar to be divided
+   * @return MatrixND Matrix that results of the division
+   */
   MatrixND &operator/=(const T &o) {
     for (uint64_t idx = 0; idx < _values.size(); idx++) {
       _values.at(idx) /= o;
@@ -185,19 +311,45 @@ public:
     return *this;
   }
 
+  /**
+   * @brief Get the dimensions of the matrix
+   * 
+   * @return const std::vector<uint64_t>& Vector containing the dimensions of this matrix
+   */
   const std::vector<uint64_t> &getDimensions() const {
     return _dimensions;
   }
 
 protected:
+  /** Dimensions for this matrix */
   const std::vector<uint64_t> _dimensions;
 
+  /** Vector to hold the values of this matrix */
   std::vector<T> _values;
 
+  /**
+   * @brief Check if this matrix can be added with another matrix
+   * 
+   * @param other Matrix to be checked if can be added with this one
+   * @return true Matrices can be added together
+   * @return false Matrices can not be added together
+   */
   bool _sumSubDimensionCheck(const MatrixND &other) const {
-    return _dimensions != other._dimensions;
+    for (uint64_t idx = 0; idx < _dimensions.size(); idx++) {
+      if (_dimensions.at(idx) != other._dimensions.at(idx)) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
+  /**
+   * @brief Get the internal size of the matrix
+   * @note This denotes the amount of indexes in the matrix
+   * 
+   * @return uint64_t Internal size of the matrix
+   */
   uint64_t _internalSize() const {
     uint64_t ret = 1;
 
@@ -208,6 +360,13 @@ protected:
     return ret;
   }
 
+  /**
+   * @brief Get the index in the value vector based on certain coordinates
+   * @exception std::runtime_error If the coordinates are not valid
+   * 
+   * @param coords Coordinates to obtain the index
+   * @return uint64_t Index in the value vector for the passed coordinates
+   */
   uint64_t _indexOf(const std::vector<uint64_t> &coords) const {
     if (coords.size() != _dimensions.size()) {
       // NOTE: This shall never happen as we assure recourse creation is correct initialization
@@ -218,9 +377,7 @@ protected:
     for (uint64_t idx = 0; idx < coords.size(); idx++) {
       if (coords.at(idx) >= _dimensions.at(idx)) {
         std::ostringstream err;
-        err << "Index {";
-        for (const uint64_t c : coords) err << c << ", ";
-        err << "} is out of range";
+        err << "Index " << _printDimensions(coords) << "} is out of range";
         throw std::runtime_error(err.str());
       }
     }
@@ -240,6 +397,12 @@ protected:
     return offset;
   }
 
+  /**
+   * @brief Print the dimensions in a human-readable way
+   * 
+   * @param d Dimensions to be printed
+   * @return std::string Dimensions in a human-readable way
+   */
   static std::string _printDimensions(const std::vector<uint64_t> &d) {
     std::ostringstream out;
     out << "{";
@@ -258,22 +421,60 @@ protected:
   }
 };
 
+/**
+ * @brief Two dimensional matrix specialization
+ * 
+ * @tparam T Template parameter type that will contain this matrix
+ */
 template<typename T = double>
 class Matrix2D : public MatrixND<T> {
 public:
   using MatrixND<T>::_indexOf;
   using MatrixND<T>::_printDimensions;
 
+  /** Deleted default constructor */
   Matrix2D() = delete;
 
+  /**
+   * @brief 2D Matrix constructor
+   * 
+   * @param rows Amount of rows for the matrix
+   * @param columns Amount of columns for the matrix
+   */
   Matrix2D(uint64_t rows, uint64_t columns) : MatrixND<T>({rows, columns}), __rows(rows), __columns(columns) {}
 
+  /**
+   * @brief 2D Matrix constructor with an initial value
+   * 
+   * @param rows Amount of rows for the matrix
+   * @param columns Amount of columns for the matrix
+   * @param initial_value Initial value for all indexes in the matrix
+   */
   Matrix2D(uint64_t rows, uint64_t columns, const T &initial_value) : MatrixND<T>({rows, columns}, initial_value), __rows(rows), __columns(columns) {}
 
+  /**
+   * @brief 2D Matrix copy constructor
+   * 
+   * @param other Matrix to be copied from
+   */
   Matrix2D(const Matrix2D &other) : MatrixND<T>(other), __rows(other.__rows), __columns(other.__columns) {}
 
+  /**
+   * @brief 2D Matrix move constructor
+   * 
+   * @param other Matrix to be moved from
+   */
   Matrix2D(Matrix2D &&other) : MatrixND<T>(std::move(other)), __rows(other.__rows), __columns(other.__columns) {}
 
+  /**
+   * @brief 2D Matrix constructor from row vectors
+   * @note This constructor is very usefull to create matrices quickly in code
+   * 
+   * @exception std::runtime_error If the rows are not consistent
+   * 
+   * @param rows Vector of vectors that represent the different rows of the desired 2D matrix
+   * @note The row and column amount will be deduced from the @a rows argument
+   */
   Matrix2D(const std::vector<std::vector<T>> &rows) : MatrixND<T>({rows.size(), rows.at(0).size()}), __rows(rows.size()), __columns(rows.at(0).size()) {
     for (const auto &row : rows) {
       if (row.size() != __columns) {
@@ -288,50 +489,110 @@ public:
     }
   }
 
+  /** Default destructor */
   ~Matrix2D() = default;
 
+  /**
+   * @brief Access to an item in the matrix
+   * 
+   * @param row Row index
+   * @param column Column index
+   * @return T& Desired item
+   */
   T &at(uint64_t row, uint64_t column) {
     return this->_values.at(_indexOf({row, column}));
   }
 
+  /**
+   * @brief Access to an item in the matrix
+   * 
+   * @param row Row index
+   * @param column Column index
+   * @return T& Desired item
+   */
   const T &at(uint64_t row, uint64_t column) const {
     return this->_values.at(_indexOf({row, column}));
   }
 
+  /**
+   * @brief Sum operator against another matrix
+   * @exception std::runtime_error If the matrices cannot be summed due to dimension issues
+   * 
+   * @param other Matrix to be summed
+   * @return Matrix2D Matrix that results of the sum
+   */
   Matrix2D operator+(const Matrix2D &other) const {
     auto ret = MatrixND<T>::operator+(other);
     return Matrix2D::fromMatrixND(ret);
   }
 
+  /**
+   * @brief Sum operator against a scalar
+   * 
+   * @param other Scalar to be summed with the matrix
+   * @return Matrix2D Matrix that results of the sum
+   */
   Matrix2D operator+(const T &o) const {
     Matrix2D ret(*this);
     ret += o;
     return ret;
   }
 
+  /**
+   * @brief Substract operator against another matrix
+   * @exception std::runtime_error If the matrices cannot be substracted due to dimension issues
+   * 
+   * @param other Matrix to be substracted
+   * @return Matrix2D Matrix that results of the Substraction
+   */
   Matrix2D operator-(const Matrix2D &other) const {
     auto ret = MatrixND<T>::operator-(other);
     return Matrix2D::fromMatrixND(ret);
   }
 
+  /**
+   * @brief Substract operator against a scalar
+   * 
+   * @param other Scalar to be substracted with the matrix
+   * @return Matrix2D Matrix that results of the substraction
+   */
   Matrix2D operator-(const T &o) const {
     Matrix2D ret(*this);
     ret -= o;
     return ret;
   }
 
+  /**
+   * @brief Multiply operator against a scalar
+   * 
+   * @param other Scalar to be multiplied with the matrix
+   * @return Matrix2D Matrix that results of the multiplication
+   */
   Matrix2D operator*(const T &o) const {
     Matrix2D ret(*this);
     ret *= o;
     return ret;
   }
 
+  /**
+   * @brief Divide operator against a scalar
+   * 
+   * @param other Scalar to be divided with the matrix
+   * @return Matrix2D Matrix that results of the division
+   */
   Matrix2D operator/(const T &o) const {
     Matrix2D ret(*this);
     ret /= o;
     return ret;
   }
 
+  /**
+   * @brief Multiply operator with another matrix
+   * @exception std::runtime_error If the two matrices cannot be multiplied due to their respective dimensions
+   * 
+   * @param other Matrix to be multiplied with
+   * @return Matrix2D Matrix that results of the multiplication
+   */
   Matrix2D operator*(const Matrix2D &other) const {
     if (__columns != other.__rows) {
       std::ostringstream err;
@@ -356,6 +617,13 @@ public:
     return ret;
   }
 
+  /**
+   * @brief Get a row from the matrix
+   * @exception std::runtime_error If the row index is out of range
+   * 
+   * @param row_idx Desired row index
+   * @return Matrix2D Desired row
+   */
   Matrix2D getRow(uint64_t row_idx) const {
     if (row_idx >= this->__rows) {
       std::ostringstream err;
@@ -372,6 +640,13 @@ public:
     return ret;
   }
 
+  /**
+   * @brief Get a column from the matrix
+   * @exception std::runtime_error If the column index is out of range
+   * 
+   * @param row_idx Desired column index
+   * @return Matrix2D Desired column
+   */
   Matrix2D getColumn(uint64_t col_idx) const {
     if (col_idx >= this->__columns) {
       std::ostringstream err;
@@ -388,18 +663,41 @@ public:
     return ret;
   }
 
+  /**
+   * @brief Get the row amount of this matrix
+   * 
+   * @return uint64_t Row amount
+   */
   uint64_t getRowAmount() const {
     return __rows;
   }
 
+  /**
+   * @brief Get the column amount of this matrix
+   * 
+   * @return uint64_t Column amount
+   */
   uint64_t getColumnAmount() const {
     return __columns;
   }
 
+  /**
+   * @brief Get the total size of this matrix
+   * 
+   * @return std::size_t Total size of the matrix
+   */
   std::size_t getSize() const {
     return this->_values.size();
   }
 
+  /**
+   * @brief Construct a 2D Matrix from an N dimensional one
+   * @exception std::runtime_error If the N dimensional matrix is not suited to create
+   * a 2D one
+   * 
+   * @param other Matrix to be used as base
+   * @return Matrix2D Resulting matrix from the transformation
+   */
   static Matrix2D fromMatrixND(const MatrixND<T> &other) {
     if (other.getDimensions().size() != 2) {
       std::ostringstream err;
@@ -413,11 +711,10 @@ public:
   }
 
 private:
-  // Matrix2D(const MatrixND<T> &other) : MatrixND<T>(other), __rows(this->_dimensions.at(0)), __columns(this->_dimensions.at(1)) {}
-
-  // Matrix2D(MatrixND<T> &&other) : MatrixND<T>(std::move(other)), __rows(this->_dimensions.at(0)), __columns(this->_dimensions.at(1)) {}
-
+  /** Row amount of this matrix */
   const uint64_t __rows;
+
+  /** Column amount of this matrix */
   const uint64_t __columns;
 };
 
