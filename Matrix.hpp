@@ -111,7 +111,7 @@ public:
    * @return MatrixND Matrix that results of the sum
    */
   MatrixND operator+(const MatrixND &other) const {
-    if (_sumSubDimensionCheck(other)) {
+    if (!_sumSubDimensionCheck(other)) {
       std::ostringstream err;
       err << "Cannot sum matrices of dimensions: " << _printDimensions(_dimensions) << " and " << _printDimensions(other._dimensions);
       throw std::runtime_error(err.str());
@@ -134,7 +134,7 @@ public:
    * @return MatrixND& Matrix that results of the sum
    */
   MatrixND &operator+=(const MatrixND &other) {
-    if (_sumSubDimensionCheck(other)) {
+    if (!_sumSubDimensionCheck(other)) {
       std::ostringstream err;
       err << "Cannot sum matrices of dimensions: " << _printDimensions(_dimensions) << " and " << _printDimensions(other._dimensions);
       throw std::runtime_error(err.str());
@@ -185,7 +185,7 @@ public:
    * @return MatrixND Matrix that results of the substraction
    */
   MatrixND operator-(const MatrixND &other) const {
-    if (_sumSubDimensionCheck(other)) {
+    if (!_sumSubDimensionCheck(other)) {
       std::ostringstream err;
       err << "Cannot substract matrices of dimensions: " << _printDimensions(_dimensions) << " and " << _printDimensions(other._dimensions);
       throw std::runtime_error(err.str());
@@ -208,7 +208,7 @@ public:
    * @return MatrixND Matrix that results of the substraction
    */
   MatrixND &operator-=(const MatrixND &other) {
-    if (_sumSubDimensionCheck(other)) {
+    if (!_sumSubDimensionCheck(other)) {
       std::ostringstream err;
       err << "Cannot substract matrices of dimensions: " << _printDimensions(_dimensions) << " and " << _printDimensions(other._dimensions);
       throw std::runtime_error(err.str());

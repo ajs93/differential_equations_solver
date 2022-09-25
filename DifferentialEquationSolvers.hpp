@@ -197,7 +197,7 @@ NthOrderDifferentialEquationResult<T> solveNthOrder(std::pair<double, double> sp
 
   // Initial conditions for result matrix
   for (uint64_t eq_idx = 0; eq_idx < eq_amount; eq_idx++) {
-    y.emplace_back(std::vector(sample_amount));
+    y.emplace_back(std::vector<double>(sample_amount));
     y.at(eq_idx).at(0) = initial_conditions.at(eq_idx);
   }
 
@@ -206,7 +206,7 @@ NthOrderDifferentialEquationResult<T> solveNthOrder(std::pair<double, double> sp
     t.at(t_idx) = span.first + (h * double(t_idx));
 
     for (uint64_t eq_idx = 0; eq_idx < eq_amount; eq_idx++) {
-      y.at(eq_idx).at(eq_idx) = point_solver(t.at(t_idx - 1), y.at(t_idx - 1).at(eq_idx, 0), h, [&y, &A, &B, &t_idx, &eq_idx, &input_generator] (double t, const T &_y) {
+      y.at(eq_idx).at(t_idx) = point_solver(t.at(t_idx - 1), y.at(eq_idx).at(t_idx - 1), h, [&y, &A, &B, &t_idx, &eq_idx, &input_generator] (double t, const T &_y) {
         auto a_x = A.getRow(eq_idx) * _y;
         auto b_u = B.getRow(eq_idx) * input_generator(t);
         return a_x.at(0, 0) + b_u.at(0, 0);

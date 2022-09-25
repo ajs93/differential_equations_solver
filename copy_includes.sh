@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DOCKER_IMAGE="numeric_calculation:test"
+DOCKER_IMAGE=`cat docker_image_name.txt`
 INCLUDE_PATH_DEST=".include"
 
 rm -rf $INCLUDE_PATH_DEST
