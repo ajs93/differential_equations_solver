@@ -1,17 +1,17 @@
 cmake_minimum_required(VERSION 3.10)
 
-project(numeric_calculation)
+project(DifferentialEquationSolvers)
 
-add_library(numeric_calculation INTERFACE)
+add_library(DifferentialEquationSolvers INTERFACE)
 
 target_include_directories(
-  numeric_calculation
+  DifferentialEquationSolvers
   INTERFACE
   ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 target_compile_features(
-  numeric_calculation
+  DifferentialEquationSolvers
   INTERFACE
   cxx_std_17
 )
@@ -34,19 +34,19 @@ if (ENABLE_TESTS STREQUAL ON)
   target_link_libraries(
     ${UNIT_TEST}
     PRIVATE
-    numeric_calculation
+    DifferentialEquationSolvers
     Catch2::Catch2WithMain
   )
 
   # This way we add compiler and linker options for all necessary targets
   target_compile_options(
-    numeric_calculation
+    DifferentialEquationSolvers
     INTERFACE
     ${GCC_COVERAGE_COMPILE_FLAGS}
   )
 
   target_link_options(
-    numeric_calculation
+    DifferentialEquationSolvers
     INTERFACE
     ${GCC_COVERAGE_LINK_FLAGS}
   )
@@ -74,5 +74,5 @@ if (ENABLE_TESTS STREQUAL ON)
   )
 endif ()
 
-# install(TARGETS mira_system DESTINATION lib)
-# install(FILES mira_system.hpp DESTINATION include)
+install(TARGETS DifferentialEquationSolvers DESTINATION lib)
+install(FILES DifferentialEquationSolvers.hpp Matrix.hpp DESTINATION include)
