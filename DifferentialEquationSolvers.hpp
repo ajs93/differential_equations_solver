@@ -187,7 +187,7 @@ DifferentialEquationResult<T> solveNthOrder(std::pair<double, double> span,
 
   for (uint64_t idx = 0; idx < C.getRowAmount(); idx++) {
     y.emplace_back(std::vector<T>(sample_amount));
-    y.at(idx).at(0) = ((C * initial_conditions) + (D.at(0, 0) * input_generator(0))).at(0, 0);
+    y.at(idx).at(0) = ((C.getRow(idx) * initial_conditions) + (D.getRow(idx) * input_generator(0))).at(0, 0);
   }
 
   for (uint64_t t_idx = 1; t_idx < sample_amount; t_idx++) {
