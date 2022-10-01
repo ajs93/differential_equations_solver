@@ -150,14 +150,14 @@ DifferentialEquationResult<T> solve(const std::pair<double, double> &span,
 
 template<typename T = double>
 DifferentialEquationResult<T> solveNthOrder(std::pair<double, double> span,
-                                                    uint64_t sample_amount,
-                                                    const Matrix2D<T> &initial_conditions,
-                                                    const InputGenerator<T> &input_generator,
-                                                    const DiffPointSolver<T> &point_solver,
-                                                    const Matrix2D<T> &A,
-                                                    const Matrix2D<T> &B,
-                                                    const Matrix2D<T> &C,
-                                                    const Matrix2D<T> &D) {
+                                            uint64_t sample_amount,
+                                            const Matrix2D<T> &initial_conditions,
+                                            const InputGenerator<T> &input_generator,
+                                            const DiffPointSolver<T> &point_solver,
+                                            const Matrix2D<T> &A,
+                                            const Matrix2D<T> &B,
+                                            const Matrix2D<T> &C,
+                                            const Matrix2D<T> &D) {
   if (A.getRowAmount() != A.getColumnAmount()) {
     throw std::runtime_error("A matrix must be a square matrix");
   }
@@ -180,12 +180,15 @@ DifferentialEquationResult<T> solveNthOrder(std::pair<double, double> span,
 
   const double h = (span.second - span.first) / double(sample_amount - 1);
   std::vector<double> t(sample_amount);
-  std::vector<T> y(sample_amount);
+  std::vector<std::vector<T>> y;
 
   Matrix2D<T> xp = initial_conditions; // Memory allocation optimization
   Matrix2D<T> aux_xp(xp.getRowAmount(), xp.getColumnAmount()); // Memory allocation optimization
 
-  y.at(0) = ((C * initial_conditions) + (D.at(0, 0) * input_generator(0))).at(0, 0);
+  for (uint64_t idx = 0; idx < C.getRowAmount(); idx++) {
+    y.emplace_back(std::vector<T>(sample_amount));
+    y.at(idx).at(0) = ((C * initial_conditions) + (D.at(0, 0) * input_generator(0))).at(0, 0);
+  }
 
   for (uint64_t t_idx = 1; t_idx < sample_amount; t_idx++) {
     t.at(t_idx) = span.first + (h * double(t_idx));
@@ -196,11 +199,14 @@ DifferentialEquationResult<T> solveNthOrder(std::pair<double, double> span,
       });
     }
     
-    y.at(t_idx) = ((C * aux_xp) + (D.at(0, 0) * input_generator(t.at(t_idx)))).at(0, 0);
+    for (uint64_t idx = 0; idx < y.size(); idx++) {
+      y.at(idx).at(t_idx) = ((C.getRow(idx) * aux_xp) + (D.getRow(idx) * input_generator(t.at(t_idx)))).at(0, 0);
+    }
+
     xp = aux_xp;
   }
 
-  return DifferentialEquationResult(t, {y});
+  return DifferentialEquationResult(t, y);
 }
 
 };
