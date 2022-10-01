@@ -322,7 +322,7 @@ public:
 
 protected:
   /** Dimensions for this matrix */
-  const std::vector<uint64_t> _dimensions;
+  std::vector<uint64_t> _dimensions;
 
   /** Vector to hold the values of this matrix */
   std::vector<T> _values;
@@ -491,6 +491,14 @@ public:
 
   /** Default destructor */
   ~Matrix2D() = default;
+
+  Matrix2D &operator=(const Matrix2D &other) {
+    this->_values = other._values;
+    this->_dimensions = other._dimensions;
+    this->__rows = other.__rows;
+    this->__columns = other.__columns;
+    return *this;
+  }
 
   /**
    * @brief Access to an item in the matrix
@@ -712,10 +720,10 @@ public:
 
 private:
   /** Row amount of this matrix */
-  const uint64_t __rows;
+  uint64_t __rows;
 
   /** Column amount of this matrix */
-  const uint64_t __columns;
+  uint64_t __columns;
 };
 
 #endif /* __MATRIX_HPP__ */

@@ -42,6 +42,12 @@ struct DifferentialEquationResult {
   DifferentialEquationResult(const DifferentialEquationResult &other) : t(other.t), y(other.y) {}
 
   DifferentialEquationResult(DifferentialEquationResult &&other) : t(std::move(other.t)), y(std::move(other.y)) {}
+
+  DifferentialEquationResult &operator=(const DifferentialEquationResult &other) {
+    t = other.t;
+    y = other.y;
+    return *this;
+  }
 };
 
 /**
@@ -145,11 +151,13 @@ DifferentialEquationResult<T> solve(const std::pair<double, double> &span,
 template<typename T = double>
 DifferentialEquationResult<T> solveNthOrder(std::pair<double, double> span,
                                                     uint64_t sample_amount,
-                                                    const std::vector<T> &initial_conditions,
+                                                    const Matrix2D<T> &initial_conditions,
                                                     const InputGenerator<T> &input_generator,
                                                     const DiffPointSolver<T> &point_solver,
                                                     const Matrix2D<T> &A,
-                                                    const Matrix2D<T> &B) {
+                                                    const Matrix2D<T> &B,
+                                                    const Matrix2D<T> &C,
+                                                    const Matrix2D<T> &D) {
   if (A.getRowAmount() != A.getColumnAmount()) {
     throw std::runtime_error("A matrix must be a square matrix");
   }
@@ -162,35 +170,37 @@ DifferentialEquationResult<T> solveNthOrder(std::pair<double, double> span,
     throw std::runtime_error("A and B matrices must have the same row amount");
   }
 
-  if (initial_conditions.size() != B.getRowAmount()) {
-    throw std::runtime_error("Initial conditions and B row amount must be equal");
+  if (C.getColumnAmount() != A.getColumnAmount()) {
+    throw std::runtime_error("A and C matrices must have the same column amount");
   }
 
-  const uint64_t eq_amount = A.getRowAmount();
+  if (C.getRowAmount() != D.getRowAmount()) {
+    throw std::runtime_error("C and D matrices must have the same row amount");
+  }
+
   const double h = (span.second - span.first) / double(sample_amount - 1);
   std::vector<double> t(sample_amount);
-  std::vector<std::vector<T>> y;
+  std::vector<T> y(sample_amount);
 
-  // Initial conditions for result matrix
-  for (uint64_t eq_idx = 0; eq_idx < eq_amount; eq_idx++) {
-    y.emplace_back(std::vector<double>(sample_amount));
-    y.at(eq_idx).at(0) = initial_conditions.at(eq_idx);
-  }
+  Matrix2D<T> xp = initial_conditions; // Memory allocation optimization
+  Matrix2D<T> aux_xp(xp.getRowAmount(), xp.getColumnAmount()); // Memory allocation optimization
 
-  // Now we need to solve the N differential equations of first order
+  y.at(0) = ((C * initial_conditions) + (D.at(0, 0) * input_generator(0))).at(0, 0);
+
   for (uint64_t t_idx = 1; t_idx < sample_amount; t_idx++) {
     t.at(t_idx) = span.first + (h * double(t_idx));
 
-    for (uint64_t eq_idx = 0; eq_idx < eq_amount; eq_idx++) {
-      y.at(eq_idx).at(t_idx) = point_solver(t.at(t_idx - 1), y.at(eq_idx).at(t_idx - 1), h, [&y, &A, &B, &t_idx, &eq_idx, &input_generator] (double t, const T &_y) {
-        auto a_x = A.getRow(eq_idx) * _y;
-        auto b_u = B.getRow(eq_idx) * input_generator(t);
-        return a_x.at(0, 0) + b_u.at(0, 0);
+    for (uint64_t xp_row = 0; xp_row < xp.getRowAmount(); xp_row++) {
+      aux_xp.at(xp_row, 0) = point_solver(t.at(t_idx - 1), xp.at(xp_row, 0), h, [&A, &xp, &B, &input_generator, &xp_row, &t_idx](double t, const T &_y) {
+        return (A.getRow(xp_row) * xp).at(0, 0) + B.at(xp_row, 0) * input_generator(t);
       });
     }
+    
+    y.at(t_idx) = ((C * aux_xp) + (D.at(0, 0) * input_generator(t.at(t_idx)))).at(0, 0);
+    xp = aux_xp;
   }
 
-  return DifferentialEquationResult(t, y);
+  return DifferentialEquationResult(t, {y});
 }
 
 };

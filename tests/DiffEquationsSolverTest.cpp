@@ -74,15 +74,17 @@ SCENARIO("N-th order differential equation with 1x1 matrix", "[auto]") {
       return 2 - exp((-4) * t);
     };
 
-    std::vector<double> initial_conditions = {1.0};
+    Matrix2D<double> initial_conditions(std::vector<std::vector<double>>{{1.0}});
     std::pair<double, double> span = {0, 0.5};
     uint64_t sample_amount = 6;
 
     Matrix2D A(std::vector<std::vector<double>>{{-2}});
-    Matrix2D B(std::vector<std::vector<double>>{{1}}); 
+    Matrix2D B(std::vector<std::vector<double>>{{1}});
+    Matrix2D C(std::vector<std::vector<double>>{{1}});
+    Matrix2D D(std::vector<std::vector<double>>{{0}});
 
     WHEN("The differential equations solver is executed with euler method") {
-      auto res = DifferentialEquationSolvers::solveNthOrder<double>(span, sample_amount, initial_conditions, input_generator, DifferentialEquationSolvers::solveEulerPoint<double>, A, B);
+      auto res = DifferentialEquationSolvers::solveNthOrder<double>(span, sample_amount, initial_conditions, input_generator, DifferentialEquationSolvers::solveEulerPoint<double>, A, B, C, D);
 
       THEN("Values check") {
         REQUIRE(res.t.at(0) == Catch::Approx(0).epsilon(0.01));
@@ -92,12 +94,12 @@ SCENARIO("N-th order differential equation with 1x1 matrix", "[auto]") {
         REQUIRE(res.t.at(4) == Catch::Approx(0.4).epsilon(0.01));
         REQUIRE(res.t.at(5) == Catch::Approx(0.5).epsilon(0.01));
 
-        REQUIRE(res.y.at(0).at(0) == Catch::Approx(1).epsilon(0.01));
-        REQUIRE(res.y.at(0).at(1) == Catch::Approx(0.9).epsilon(0.01));
-        REQUIRE(res.y.at(0).at(2) == Catch::Approx(0.852967995).epsilon(0.01));
-        REQUIRE(res.y.at(0).at(3) == Catch::Approx(0.837441500).epsilon(0.01));
-        REQUIRE(res.y.at(0).at(4) == Catch::Approx(0.839833779).epsilon(0.01));
-        REQUIRE(res.y.at(0).at(5) == Catch::Approx(0.851677371).epsilon(0.01));
+        CHECK(res.y.at(0).at(0) == Catch::Approx(1).epsilon(0.01));
+        CHECK(res.y.at(0).at(1) == Catch::Approx(0.9).epsilon(0.01));
+        CHECK(res.y.at(0).at(2) == Catch::Approx(0.852967995).epsilon(0.01));
+        CHECK(res.y.at(0).at(3) == Catch::Approx(0.837441500).epsilon(0.01));
+        CHECK(res.y.at(0).at(4) == Catch::Approx(0.839833779).epsilon(0.01));
+        CHECK(res.y.at(0).at(5) == Catch::Approx(0.851677371).epsilon(0.01));
       }
     }
   }
