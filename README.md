@@ -26,6 +26,8 @@ To fetch the include files of the docker image to develop in the local environme
 ./copy_includes.sh
 ```
 
-It will fetch all the ncecessary header files from the docker container into the local environment to the ".include" directory.
+It will fetch all the necessary header files from the docker container into the local environment to the ".include" directory.
 
-[ ] - Improve documentation and developed test scenarios
+### Library API
+
+In order to check how to use this library, check the unit tests located in the tests/ directory of this project.
