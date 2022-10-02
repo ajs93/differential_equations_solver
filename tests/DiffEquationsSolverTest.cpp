@@ -84,7 +84,7 @@ SCENARIO("N-th order differential equation with 1x1 matrix", "[auto]") {
     Matrix2D D(std::vector<std::vector<double>>{{0}});
 
     WHEN("The differential equations solver is executed with euler method") {
-      auto res = DifferentialEquationSolvers::solveNthOrder<double>(span, sample_amount, initial_conditions, input_generator, DifferentialEquationSolvers::solveEulerPoint<double>, A, B, C, D);
+      auto res = DifferentialEquationSolvers::solveMatricial<double>(span, sample_amount, initial_conditions, input_generator, DifferentialEquationSolvers::solveEulerPoint<double>, A, B, C, D);
 
       THEN("Values check") {
         REQUIRE(res.t.at(0) == Catch::Approx(0).epsilon(0.01));

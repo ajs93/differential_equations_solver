@@ -12,10 +12,19 @@ template<typename T = double>
 using InputGenerator = std::function<T(double t)>;
 
 template<typename T = double>
+using MatricialInputGenerator = std::function<Matrix2D<T>(double t)>;
+
+template<typename T = double>
 using EcuationGenerator = std::function<T(double t, const T &y)>;
 
 template<typename T = double>
+using MatricialEcuationGenerator = std::function<Matrix2D<T>(double t, const Matrix2D<T> &y)>;
+
+template<typename T = double>
 using DiffPointSolver = std::function<T(double t_prev, const T &y_prev, double h, const EcuationGenerator<T> &diff_eq)>;
+
+template<typename T = double>
+using MatricialDiffPointSolver = std::function<Matrix2D<T>(double t_prev, const Matrix2D<T> &y_prev, double h, const MatricialEcuationGenerator<T> &diff_eq)>;
 
 /**
  * @brief Result from resolving an Nth order differential equation system
@@ -66,6 +75,21 @@ T solveEulerPoint(double t_prev, const T &y_prev, double h, const EcuationGenera
 }
 
 /**
+ * @brief Calculate a differential matricial point with the Euler method
+ * 
+ * @tparam T Template data type for this solver
+ * @param t_prev Previous time for the calculation
+ * @param y_prev Previous result for the calculation
+ * @param h Sample time delta
+ * @param diff_eq Differential equation generator
+ * @return Matrix2D<T> Calculated point
+ */
+template<typename T = double>
+Matrix2D<T> solveMatricialEulerPoint(double t_prev, const Matrix2D<T> &y_prev, double h, const MatricialEcuationGenerator<T> &diff_eq) {
+  return y_prev + h * diff_eq(t_prev, y_prev);
+}
+
+/**
  * @brief Calculate a differential point with the Heun/Newton method
  * 
  * @tparam T Template data type for this solver
@@ -78,8 +102,25 @@ T solveEulerPoint(double t_prev, const T &y_prev, double h, const EcuationGenera
 template<typename T = double>
 T solveHeunPoint(double t_prev, const T &y_prev, double h, const EcuationGenerator<T> &diff_eq) {
   T euler_term = diff_eq(t_prev, y_prev);
-  T heun_term = diff_eq(t_prev + h, y_prev + h * diff_eq(t_prev, y_prev));
-  return y_prev + ((h / 2.0) * (euler_term + heun_term));
+  T heun_term = diff_eq(t_prev + h, y_prev + h * euler_term);
+  return ((h / 2.0) * (euler_term + heun_term)) + y_prev;
+}
+
+/**
+ * @brief Calculate a differential matricial point with the Heun method
+ * 
+ * @tparam T Template data type for this solver
+ * @param t_prev Previous time for the calculation
+ * @param y_prev Previous result for the calculation
+ * @param h Sample time delta
+ * @param diff_eq Differential equation generator
+ * @return Matrix2D<T> Calculated point
+ */
+template<typename T = double>
+Matrix2D<T> solveMatricialHeunPoint(double t_prev, const Matrix2D<T> &y_prev, double h, const MatricialEcuationGenerator<T> &diff_eq) {
+  Matrix2D<T> euler_term = diff_eq(t_prev, y_prev);
+  Matrix2D<T> heun_term = diff_eq(t_prev + h, y_prev + euler_term * h);
+  return ((h / 2.0) * (euler_term + heun_term)) + y_prev;
 }
 
 /**
@@ -100,6 +141,26 @@ T solveRungeKuttaPoint(double t_prev, const T &y_prev, double h, const EcuationG
   auto f4 = diff_eq(t_prev + h, y_prev + (h * f3));
 
   return y_prev + h * ((f1 + (2 * f2) + (2 * f3) + f4) / 6);
+}
+
+/**
+ * @brief Calculate a differential matricial point with the Runge-Kutta 4 method
+ * 
+ * @tparam T Template data type for this solver
+ * @param t_prev Previous time for the calculation
+ * @param y_prev Previous result for the calculation
+ * @param h Sample time delta
+ * @param diff_eq Differential equation generator
+ * @return Matrix2D<T> Calculated point
+ */
+template<typename T = double>
+Matrix2D<T> solveMatricialRungeKuttaPoint(double t_prev, const Matrix2D<T> &y_prev, double h, const MatricialEcuationGenerator<T> &diff_eq) {
+  auto f1 = diff_eq(t_prev, y_prev);
+  auto f2 = diff_eq(t_prev + (h / 2.0), y_prev + (f1 * (h / 2.0)));
+  auto f3 = diff_eq(t_prev + (h / 2.0), y_prev + (f2 * (h / 2.0)));
+  auto f4 = diff_eq(t_prev + h, y_prev + (f3 * h));
+
+  return y_prev + h * ((f1 + (f2 * 2.0) + (f3 * 2.0) + f4) / 6.0);
 }
 
 /**
@@ -147,27 +208,65 @@ DifferentialEquationResult<T> solve(const std::pair<double, double> &span,
   return DifferentialEquationResult(t, y);
 }
 
-
+/**
+ * @brief Solve differential equation system
+ * 
+ * A differential equation system is defined by:
+ * X' = A X + B U
+ * Y  = C X + D U
+ * Where the dimensions are as follows:
+ * A  => MxM
+ * B  => MxP
+ * C  => NxM
+ * D  => NxP
+ * X  => Mx1
+ * X' => Mx1
+ * Y  => Nx1
+ * U  => Px1
+ * 
+ * Where:
+ * M => Amount of state variables of the system
+ * N => Amount of outputs of the system
+ * P => Amount of inputs of the system
+ * 
+ * @exception std::runtime_error If there is a mismatch between needed matrices size
+ * conditions
+ * 
+ * @tparam T Template data type for this solver
+ * @param span Time span where to solve the differential equation
+ * @param sample_amount Desired amount of samples between the time span
+ * @param initial_conditions Matrix of initial conditions for the results
+ * in column format
+ * @param input_generator Matricial generator for the inputs of the system
+ * @param point_solver Desired matricial differential point solver 
+ * @param A State matrix
+ * @param B Input matrix
+ * @param C Output matrix
+ * @param D Feedthrough matrix
+ * @return DifferentialEquationResult<T> Outputs of the system
+ */
 template<typename T = double>
-DifferentialEquationResult<T> solveNthOrder(std::pair<double, double> span,
-                                            uint64_t sample_amount,
-                                            const Matrix2D<T> &initial_conditions,
-                                            const InputGenerator<T> &input_generator,
-                                            const DiffPointSolver<T> &point_solver,
-                                            const Matrix2D<T> &A,
-                                            const Matrix2D<T> &B,
-                                            const Matrix2D<T> &C,
-                                            const Matrix2D<T> &D) {
+DifferentialEquationResult<T> solveMatricial(std::pair<double, double> span,
+                                             uint64_t sample_amount,
+                                             const Matrix2D<T> &initial_conditions,
+                                             const MatricialInputGenerator<T> &input_generator,
+                                             const MatricialDiffPointSolver<T> &point_solver,
+                                             const Matrix2D<T> &A,
+                                             const Matrix2D<T> &B,
+                                             const Matrix2D<T> &C,
+                                             const Matrix2D<T> &D) {
+  const Matrix2D<T> initial_input = input_generator(0);
+  
   if (A.getRowAmount() != A.getColumnAmount()) {
     throw std::runtime_error("A matrix must be a square matrix");
   }
 
-  if (B.getColumnAmount() != 1) {
-    throw std::runtime_error("B matrix must be a column matrix");
-  }
-
   if (A.getRowAmount() != B.getRowAmount()) {
     throw std::runtime_error("A and B matrices must have the same row amount");
+  }
+
+  if (B.getColumnAmount() != initial_input.getRowAmount()) {
+    throw std::runtime_error("B matrix column amount and input generator output rows must match");
   }
 
   if (C.getColumnAmount() != A.getColumnAmount()) {
@@ -178,31 +277,47 @@ DifferentialEquationResult<T> solveNthOrder(std::pair<double, double> span,
     throw std::runtime_error("C and D matrices must have the same row amount");
   }
 
+  if (D.getColumnAmount() != initial_input.getRowAmount()) {
+    throw std::runtime_error("D column amount and input generator output rows must match");
+  }
+
+  if (initial_conditions.getColumnAmount() != 1) {
+    throw std::runtime_error("Initial conditions must be a column matrix");
+  }
+
+  if (initial_conditions.getRowAmount() != A.getRowAmount()) {
+    throw std::runtime_error("Initial conditions and A matrix row amount must match");
+  }
+
   const double h = (span.second - span.first) / double(sample_amount - 1);
   std::vector<double> t(sample_amount);
   std::vector<std::vector<T>> y;
 
   Matrix2D<T> xp = initial_conditions; // Memory allocation optimization
-  Matrix2D<T> aux_xp(xp.getRowAmount(), xp.getColumnAmount()); // Memory allocation optimization
 
   for (uint64_t idx = 0; idx < C.getRowAmount(); idx++) {
     y.emplace_back(std::vector<T>(sample_amount));
-    y.at(idx).at(0) = ((C.getRow(idx) * initial_conditions) + (D.getRow(idx) * input_generator(0))).at(0, 0);
+    
+    auto initials = (C * initial_conditions) + (D * initial_input);
+
+    for (uint64_t idx = 0; idx < y.size(); idx++) {
+      y.at(idx).at(0) = initials.at(idx, 0);
+    }
   }
 
   for (uint64_t t_idx = 1; t_idx < sample_amount; t_idx++) {
     t.at(t_idx) = span.first + (h * double(t_idx));
 
-    for (uint64_t xp_row = 0; xp_row < xp.getRowAmount(); xp_row++) {
-      aux_xp.at(xp_row, 0) = point_solver(t.at(t_idx - 1), xp.at(xp_row, 0), h, [&A, &xp, &B, &input_generator, &xp_row, &t_idx](double t, const T &_y) {
-        return (A.getRow(xp_row) * xp).at(0, 0) + B.at(xp_row, 0) * input_generator(t);
-      });
-    }
+    Matrix2D<T> aux_xp = point_solver(t.at(t_idx - 1), xp, h, [&input_generator, &A, &B](double t, const Matrix2D<T> &y) {
+      return A * y + B * input_generator(t);
+    });
+
+    auto outs = (C * aux_xp) + (D * input_generator(t.at(t_idx)));
     
     for (uint64_t idx = 0; idx < y.size(); idx++) {
-      y.at(idx).at(t_idx) = ((C.getRow(idx) * aux_xp) + (D.getRow(idx) * input_generator(t.at(t_idx)))).at(0, 0);
+      y.at(idx).at(t_idx) = outs.at(idx, 0);
     }
-
+    
     xp = aux_xp;
   }
 

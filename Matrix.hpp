@@ -104,11 +104,11 @@ public:
   }
 
   /**
-   * @brief Sum operator against another matrix
-   * @exception std::runtime_error If the matrices cannot be summed due to dimension issues
+   * @brief Add operator against another matrix
+   * @exception std::runtime_error If the matrices cannot be added due to dimension issues
    * 
-   * @param other Matrix to be summed
-   * @return MatrixND Matrix that results of the sum
+   * @param other Matrix to be added
+   * @return MatrixND Matrix that results of the addition
    */
   MatrixND operator+(const MatrixND &other) const {
     if (!_sumSubDimensionCheck(other)) {
@@ -127,11 +127,11 @@ public:
   }
 
   /**
-   * @brief Sum and assign operator against another matrix
-   * @exception std::runtime_error If the matrices cannot be summed due to dimension issues
+   * @brief Add and assign operator against another matrix
+   * @exception std::runtime_error If the matrices cannot be added due to dimension issues
    * 
-   * @param other Matrix to be summed
-   * @return MatrixND& Matrix that results of the sum
+   * @param other Matrix to be added
+   * @return MatrixND& Matrix that results of the addition
    */
   MatrixND &operator+=(const MatrixND &other) {
     if (!_sumSubDimensionCheck(other)) {
@@ -148,10 +148,10 @@ public:
   }
 
   /**
-   * @brief Sum operator against a scalar
+   * @brief Add operator against a scalar
    * 
-   * @param other Scalar to be summed with the matrix
-   * @return MatrixND Matrix that results of the sum
+   * @param other Scalar to be added with the matrix
+   * @return MatrixND Matrix that results of the addition
    */
   MatrixND operator+(const T &o) const {
     MatrixND ret(*this);
@@ -164,10 +164,21 @@ public:
   }
 
   /**
-   * @brief Sum and assign operator against a scalar
+   * @brief Add operator against a scalar and an ND matrix
    * 
-   * @param other Scalar to be summed with the matrix
-   * @return MatrixND Matrix that results of the sum
+   * @param o Scalar to be added with the matrix
+   * @param m Matrix to be added with the scalar
+   * @return MatrixND Result of the addition
+   */
+  friend MatrixND operator+(const T &o, const MatrixND &m) {
+    return m + o;
+  }
+
+  /**
+   * @brief Add and assign operator against a scalar
+   * 
+   * @param o Scalar to be added with the matrix
+   * @return MatrixND Matrix that results of the addition
    */
   MatrixND &operator+=(const T &o) {
     for (uint64_t idx = 0; idx < _values.size(); idx++) {
@@ -238,6 +249,17 @@ public:
   }
 
   /**
+   * @brief Substract operator against a scalar and an ND matrix
+   * 
+   * @param o Scalar to be substracted with the matrix
+   * @param m Matrix to be substracted with the scalar
+   * @return MatrixND Result of the substraction
+   */
+  friend MatrixND operator-(const T &o, const MatrixND &m) {
+    return m - o;
+  }
+
+  /**
    * @brief Substract and assign operator against a scalar
    * 
    * @param other Scalar to be substracted
@@ -268,6 +290,17 @@ public:
   }
 
   /**
+   * @brief Multiply operator against a scalar and an ND matrix
+   * 
+   * @param o Scalar to be multiplicated with the matrix
+   * @param m Matrix to be multiplicated with the scalar
+   * @return MatrixND Result of the multiplication
+   */
+  friend MatrixND operator*(const T &o, const MatrixND &m) {
+    return m * o;
+  }
+
+  /**
    * @brief Multiply and assign operator against a scalar
    * 
    * @param other Scalar to be multiplied
@@ -295,6 +328,17 @@ public:
     }
 
     return ret;
+  }
+
+  /**
+   * @brief Divide operator against a scalar and an ND matrix
+   * 
+   * @param o Scalar to be divided with the matrix
+   * @param m Matrix to be divided with the scalar
+   * @return MatrixND Result of the division
+   */
+  friend MatrixND operator/(const T &o, const MatrixND &m) {
+    return m / o;
   }
 
   /**
@@ -492,6 +536,12 @@ public:
   /** Default destructor */
   ~Matrix2D() = default;
 
+  /**
+   * @brief Equality operator
+   * 
+   * @param other Matrix to be copied inside this object
+   * @return Matrix2D& Same matrix reference
+   */
   Matrix2D &operator=(const Matrix2D &other) {
     this->_values = other._values;
     this->_dimensions = other._dimensions;
@@ -523,11 +573,11 @@ public:
   }
 
   /**
-   * @brief Sum operator against another matrix
-   * @exception std::runtime_error If the matrices cannot be summed due to dimension issues
+   * @brief Add operator against another matrix
+   * @exception std::runtime_error If the matrices cannot be added due to dimension issues
    * 
-   * @param other Matrix to be summed
-   * @return Matrix2D Matrix that results of the sum
+   * @param other Matrix to be added
+   * @return Matrix2D Matrix that results of the addition
    */
   Matrix2D operator+(const Matrix2D &other) const {
     auto ret = MatrixND<T>::operator+(other);
@@ -535,15 +585,26 @@ public:
   }
 
   /**
-   * @brief Sum operator against a scalar
+   * @brief Add operator against a scalar
    * 
-   * @param other Scalar to be summed with the matrix
-   * @return Matrix2D Matrix that results of the sum
+   * @param other Scalar to be added with the matrix
+   * @return Matrix2D Matrix that results of the addition
    */
   Matrix2D operator+(const T &o) const {
     Matrix2D ret(*this);
     ret += o;
     return ret;
+  }
+
+  /**
+   * @brief Addition operator against a scalar and a 2D matrix
+   * 
+   * @param o Scalar to be added with the matrix
+   * @param m Matrix to be added with the scalar
+   * @return MatrixND Result of the addition
+   */
+  friend Matrix2D operator+(const T &o, const Matrix2D &m) {
+    return m + o;
   }
 
   /**
@@ -571,6 +632,17 @@ public:
   }
 
   /**
+   * @brief Substract operator against a scalar and a 2D matrix
+   * 
+   * @param o Scalar to be substracted with the matrix
+   * @param m Matrix to be substracted with the scalar
+   * @return MatrixND Result of the substraction
+   */
+  friend Matrix2D operator-(const T &o, const Matrix2D &m) {
+    return m - o;
+  }
+
+  /**
    * @brief Multiply operator against a scalar
    * 
    * @param other Scalar to be multiplied with the matrix
@@ -583,6 +655,17 @@ public:
   }
 
   /**
+   * @brief Multiply operator against a scalar and a 2D matrix
+   * 
+   * @param o Scalar to be multiplied with the matrix
+   * @param m Matrix to be multiplied with the scalar
+   * @return MatrixND Result of the multiplication
+   */
+  friend Matrix2D operator*(const T &o, const Matrix2D &m) {
+    return m * o;
+  }
+
+  /**
    * @brief Divide operator against a scalar
    * 
    * @param other Scalar to be divided with the matrix
@@ -592,6 +675,17 @@ public:
     Matrix2D ret(*this);
     ret /= o;
     return ret;
+  }
+
+  /**
+   * @brief Divide operator against a scalar and a 2D matrix
+   * 
+   * @param o Scalar to be divided with the matrix
+   * @param m Matrix to be divided with the scalar
+   * @return MatrixND Result of the division
+   */
+  friend Matrix2D operator/(const T &o, const Matrix2D &m) {
+    return m / o;
   }
 
   /**
